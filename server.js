@@ -10,7 +10,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const API_KEY = process.env.RECURLY_PRIVATE_KEY;
-const PLAN_CODE = 'your-plan-code'; // Replace with your plan
+const PLAN_CODE = 'premium-monthly';
 const BASE_URL = 'https://v3.eu.recurly.com';
 
 const headers = {

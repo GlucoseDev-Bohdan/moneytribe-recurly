@@ -1,61 +1,61 @@
 // backend/server.js
 const express = require('express');
 const bodyParser = require('body-parser');
-const { Client } = require('recurly');
 const cors = require('cors');
+const fetch = require('node-fetch');
 require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 3000;
-
-const recurly = new Client(process.env.RECURLY_PRIVATE_KEY);
-const PLAN_CODE = 'moneytribe-monthly';
-
 app.use(cors());
 app.use(bodyParser.json());
+
+const API_KEY = process.env.RECURLY_PRIVATE_KEY;
+const PLAN_CODE = 'premium-monthly';
+const BASE_URL = 'https://v3.eu.recurly.com';
+
+const headers = {
+  Authorization: 'Basic ' + Buffer.from(API_KEY + ':').toString('base64'),
+  Accept: 'application/vnd.recurly.v2021-02-25+json',
+  'Content-Type': 'application/json',
+};
 
 app.post('/subscribe', async (req, res) => {
   const { firstName, lastName, email, recurlyToken } = req.body;
 
-  if (!firstName || !lastName || !email || !recurlyToken) {
-    return res.status(400).json({ success: false, message: 'Missing fields' });
-  }
-
   try {
-    const account = await recurly.createAccount({
-      code: email,
-      firstName,
-      lastName,
-      email,
-      billingInfo: {
-        tokenId: recurlyToken
-      }
-    });
+    const account = await fetch(`${BASE_URL}/accounts`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        code: email,
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        billing_info: { token_id: recurlyToken }
+      })
+    }).then(res => res.json());
 
-    const subscription = await recurly.createSubscription({
-      planCode: PLAN_CODE,
-      account: { code: account.code }
-    });
+    if (!account.id) throw new Error(account.error || 'Account creation failed.');
 
-    return res.json({
-      success: true,
-      subscriptionId: subscription.uuid,
-      message: 'Subscription created successfully!'
-    });
+    const subscription = await fetch(`${BASE_URL}/subscriptions`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        plan_code: PLAN_CODE,
+        account: { code: email }
+      })
+    }).then(res => res.json());
 
-  } catch (error) {
-    console.error('❌ Recurly error:', error?.response?.data || error.message);
-    return res.status(500).json({
-      success: false,
-      message: error?.response?.data?.error || error.message
-    });
+    if (!subscription.id) throw new Error(subscription.error || 'Subscription failed.');
+
+    res.json({ success: true, message: '🎉 Subscription created!' });
+
+  } catch (err) {
+    console.error('❌ Error:', err);
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-app.get('/', (req, res) => {
-  res.send('✅ MoneyTribe21 Recurly backend is live!');
-});
-
-app.listen(port, () => {
-  console.log(`🚀 Server listening on port ${port}`);
+app.listen(process.env.PORT || 3000, () => {
+  console.log('✅ Backend running on port 3000');
 });

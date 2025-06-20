@@ -20,7 +20,7 @@ const headers = {
 };
 
 app.post('/subscribe', async (req, res) => {
-  const { firstName, lastName, email, recurlyToken } = req.body;
+  const { firstName, lastName, email, token } = req.body;
 
   try {
     const account = await fetch(`${BASE_URL}/accounts`, {
@@ -31,7 +31,7 @@ app.post('/subscribe', async (req, res) => {
         email,
         first_name: firstName,
         last_name: lastName,
-        billing_info: { token_id: recurlyToken }
+        billing_info: { token_id: token }
       })
     }).then(res => res.json());
 

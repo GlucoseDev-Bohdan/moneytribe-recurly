@@ -10,7 +10,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const API_KEY = process.env.RECURLY_PRIVATE_KEY;
-const PLAN_CODE = 'premium-monthly';
+const PLAN_CODE = 'your-plan-code'; // Replace with your plan
 const BASE_URL = 'https://v3.eu.recurly.com';
 
 const headers = {
@@ -54,6 +54,10 @@ app.post('/subscribe', async (req, res) => {
     console.error('❌ Error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
+});
+
+app.get('/', (req, res) => {
+  res.send('✅ MoneyTribe21 Recurly backend is live!');
 });
 
 app.listen(process.env.PORT || 3000, () => {

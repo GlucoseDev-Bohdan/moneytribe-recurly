@@ -9,7 +9,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-const API_KEY = process.env.RECURLY_PRIVATE_KEY;
+const API_KEY = 'c0de0391e84842b08e044ff4e8d69690';
 const PLAN_CODE = 'premium-monthly';
 const BASE_URL = 'https://v3.eu.recurly.com';
 
@@ -19,32 +19,45 @@ const headers = {
   'Content-Type': 'application/json',
 };
 
+async function createAccounts(accountData) {
+  try {
+    const response = await axios.post(`${BASE_URL}/accounts`, accountData, { headers });
+    return response.data;
+  } catch (err) {
+    throw err;
+  }
+}
+
+async function createSubscriptions(subscriptionData) {
+  try {
+    const res = await axios.post(`${BASE_URL}/subscriptions`, subscriptionData, { headers });
+    console.log(`✅ Created subscription for ${subscriptionData.account.code} on plan ${subscriptionData.plan_code}`);
+  } catch (err) {
+    console.error(`❌ Failed to create subscription for ${subscriptionData.account.code}:`, err.response?.data || err.message);
+  }
+}
+
 app.post('/subscribe', async (req, res) => {
   const { firstName, lastName, email, token } = req.body;
 
   try {
-    const account = await fetch(`${BASE_URL}/accounts`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
+    const account = await createAccounts(JSON.stringify({
         code: email,
         email,
         first_name: firstName,
         last_name: lastName,
         billing_info: { token_id: token }
       })
-    }).then(res => res.json());
+    ).then(res => res.json());
 
     if (!account.id) throw new Error(account.error || 'Account creation failed.');
 
-    const subscription = await fetch(`${BASE_URL}/subscriptions`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
+    const subscription = await createSubscriptions(JSON.stringify({
         plan_code: PLAN_CODE,
+        currency: `USD`,
         account: { code: email }
       })
-    }).then(res => res.json());
+    ).then(res => res.json());
 
     if (!subscription.id) throw new Error(subscription.error || 'Subscription failed.');
 

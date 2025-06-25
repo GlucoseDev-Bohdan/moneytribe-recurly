@@ -25,11 +25,11 @@ app.use((err, req, res, next) => {
   next();
 });
 
-const RECURY_API_KEY = 'c0de0391e84842b08e044ff4e8d69690';
-const BASE_URL = 'https://v3.eu.recurly.com';
+const RECURLY_API_KEY = process.env.RECURLY_API_KEY;
+const BASE_URL = process.env.RECURLY_BASE_URL;
 
 const headers = {
-  Authorization: 'Basic ' + Buffer.from(RECURY_API_KEY + ':').toString('base64'),
+  Authorization: 'Basic ' + Buffer.from(RECURLY_API_KEY + ':').toString('base64'),
   Accept: 'application/vnd.recurly.v2021-02-25+json',
   'Content-Type': 'application/json',
 };

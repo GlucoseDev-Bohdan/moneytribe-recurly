@@ -28,6 +28,15 @@ app.use((err, req, res, next) => {
 const RECURLY_API_KEY = process.env.RECURLY_API_KEY;
 const BASE_URL = process.env.RECURLY_BASE_URL;
 
+if (!RECURLY_API_KEY || !BASE_URL) {
+  console.error('❌ Missing required environment variables');
+  console.log('Current environment:', {
+    RECURLY_API_KEY: !!RECURLY_API_KEY,
+    RECURLY_BASE_URL: BASE_URL
+  });
+  process.exit(1);
+}
+
 const headers = {
   Authorization: 'Basic ' + Buffer.from(RECURLY_API_KEY + ':').toString('base64'),
   Accept: 'application/vnd.recurly.v2021-02-25+json',

@@ -27,12 +27,23 @@ app.use((err, req, res, next) => {
 
 const RECURLY_API_KEY = 'c0de0391e84842b08e044ff4e8d69690';
 const BASE_URL = 'https://v3.eu.recurly.com';
+const Webhook_URL = 'https://hooks.moneytribe21.com/webhook/f75c292c-92e1-4bd1-84ec-d884428a815d';
 
 const headers = {
   Authorization: 'Basic ' + Buffer.from(RECURLY_API_KEY + ':').toString('base64'),
   Accept: 'application/vnd.recurly.v2021-02-25+json',
   'Content-Type': 'application/json',
 };
+
+async function getAccount(accountCode) {
+  try {
+    const response = await axios.get(`${BASE_URL}/accounts/${accountCode}`, { headers });
+    return response.data;
+  } catch (err) {
+    console.error('Recurly API Error Details:', err.response?.data);
+    throw err;
+  }
+}
 
 async function createAccounts(accountData) {
   try {
@@ -55,6 +66,24 @@ async function createSubscriptions(subscriptionData) {
   }
 }
 
+async function getHostedLoginToken(accountCode) {
+  const account = await getAccount(accountCode);
+  const token = account.hostedLoginToken;
+  const url = `${BASE_URL}/account/${token}`;
+  return url;
+}
+
+async function sendWebhookPayload(webhookData) {
+  try {
+    const res = await axios.post(Webhook_URL, webhookData, { headers });
+    console.log(`✅ Sent Webhook for ${webhookData.data.email}`);
+    return res.data;
+  } catch (err) {
+    console.error(`❌ Failed to send Webhook for ${webhookData.data.email}:`, err.response?.data || err.message);
+    throw err;
+  }
+}
+
 app.post('/subscribe', async (req, res) => {
 
   console.log('Raw headers:', req.headers);
@@ -67,10 +96,11 @@ app.post('/subscribe', async (req, res) => {
     country,
     plan,
     whatsapp,
+    password,
     recurlyToken
   } = req.body;
 
-  if (!email || !recurlyToken || !first_name || !last_name || !country || !plan) {
+  if (!email || !recurlyToken || !first_name || !last_name || !country || !plan || !password) {
     return res.status(400).json({ success: false, message: 'Missing required fields' });
   }
 
@@ -90,6 +120,20 @@ app.post('/subscribe', async (req, res) => {
       }
     };
 
+    const webhookPayload = {
+      event: "new_account_created",
+      data: {
+        accountCode,
+        first_name,
+        last_name,
+        email,
+        whatsapp,
+        password,
+        recurlyToken
+      },
+      timestamp: new Date().toISOString()
+    }
+
     const accountResp = await createAccounts(accountPayload);
 
     const planCode = plan === 'monthly' ? 'c9a88f3e-323e-495b-8f14-3451d4402bcf' : '1f91cb79-b55f-4482-945f-cf655a135a36';
@@ -103,6 +147,10 @@ app.post('/subscribe', async (req, res) => {
     const subscriptionResp = await createSubscriptions(subscriptionPayload);
     console.log('✅ Subscription created:', subscriptionResp);
     res.status(200).json({ success: true, message: 'Subscription successful!', subscriptionResp });
+
+    const webhookResp = await sendWebhookPayload(webhookPayload);
+    console.log('✅ Webhook sent:', webhookResp);
+
   } catch (err) {
     console.error('❌ Error:', err);
     res.status(500).json({ success: false, message: 'Server error', error: err.message });

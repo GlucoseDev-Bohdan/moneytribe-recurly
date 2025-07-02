@@ -134,7 +134,7 @@ app.post('/subscribe', async (req, res) => {
       timestamp: new Date().toISOString()
     }
 
-    // const accountResp = await createAccounts(accountPayload);
+    const accountResp = await createAccounts(accountPayload);
 
     const planCode = plan === 'monthly' ? 'c9a88f3e-323e-495b-8f14-3451d4402bcf' : '1f91cb79-b55f-4482-945f-cf655a135a36';
     const subscriptionPayload = {
@@ -144,12 +144,12 @@ app.post('/subscribe', async (req, res) => {
         code: accountCode
       }
     };
-    // const subscriptionResp = await createSubscriptions(subscriptionPayload);
-    // console.log('✅ Subscription created:', subscriptionResp);
-    // res.status(200).json({ success: true, message: 'Subscription successful!', subscriptionResp });
+    const subscriptionResp = await createSubscriptions(subscriptionPayload);
+    console.log('✅ Subscription created:', subscriptionResp);
+    res.status(200).json({ success: true, message: 'Subscription successful!', subscriptionResp });
 
-    // const webhookResp = await sendWebhookPayload(webhookPayload);
-    // console.log('✅ Webhook sent:', webhookResp);
+    const webhookResp = await sendWebhookPayload(webhookPayload);
+    console.log('✅ Webhook sent:', webhookResp);
 
   } catch (err) {
     console.error('❌ Error:', err);

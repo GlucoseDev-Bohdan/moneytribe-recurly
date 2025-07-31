@@ -162,7 +162,7 @@ app.post('/subscribe', async (req, res) => {
     const planCode = plan === 'monthly' ? 'c9a88f3e-323e-495b-8f14-3451d4402bcf' : '1f91cb79-b55f-4482-945f-cf655a135a36';
     const subscriptionPayload = {
       plan_code: planCode,
-      currency: 'USD',
+      currency: 'ZAR',
       account: {
         code: accountCode
       }

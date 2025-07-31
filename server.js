@@ -25,10 +25,10 @@ app.use((err, req, res, next) => {
   next();
 });
 
-// const RECURLY_API_KEY = 'c0de0391e84842b08e044ff4e8d69690';
-const RECURLY_API_KEY = 'c3fdabc62b2e49f5bc95996fe53e31b7';
+const RECURLY_API_KEY = 'c0de0391e84842b08e044ff4e8d69690';
+// const RECURLY_API_KEY = 'c3fdabc62b2e49f5bc95996fe53e31b7';
 const BASE_URL = 'https://v3.eu.recurly.com';
-// const Webhook_URL = 'https://hooks.moneytribe21.com/webhook/f75c292c-92e1-4bd1-84ec-d884428a815d';
+const Webhook_URL = 'https://hooks.moneytribe21.com/webhook/f75c292c-92e1-4bd1-84ec-d884428a815d';
 
 const headers = {
   Authorization: 'Basic ' + Buffer.from(RECURLY_API_KEY + ':').toString('base64'),
@@ -158,11 +158,12 @@ app.post('/subscribe', async (req, res) => {
     }
 
     const accountResp = await createAccounts(accountPayload);
+    console.log('✅ Subscription created:', accountResp);
 
     const planCode = plan === 'monthly' ? 'c9a88f3e-323e-495b-8f14-3451d4402bcf' : '1f91cb79-b55f-4482-945f-cf655a135a36';
     const subscriptionPayload = {
       plan_code: planCode,
-      currency: 'ZAR',
+      currency: 'USD',
       account: {
         code: accountCode
       }
@@ -171,8 +172,8 @@ app.post('/subscribe', async (req, res) => {
     console.log('✅ Subscription created:', subscriptionResp);
     res.status(200).json({ success: true, message: 'Subscription successful!', subscriptionResp });
 
-    // const webhookResp = await sendWebhookPayload(webhookPayload);
-    // console.log('✅ Webhook sent:', webhookResp);
+    const webhookResp = await sendWebhookPayload(webhookPayload);
+    console.log('✅ Webhook sent:', webhookResp);
 
   } catch (err) {
     console.error('❌ Error:', err);

@@ -157,20 +157,34 @@ app.post('/subscribe', async (req, res) => {
       timestamp: new Date().toISOString()
     }
 
-    const accountResp = await createAccounts(accountPayload);
-    console.log('✅ Subscription created:', accountResp);
+    try {
+      const accountResp = await createAccounts(accountPayload);
+      console.log(`✅ Created account ${accountCode}`);
+    } catch (err) {
+      console.error(`❌ Failed to create account ${accountCode}:`, err.response?.data || err.message);
+    }
+
 
     const planCode = plan === 'monthly' ? 'c9a88f3e-323e-495b-8f14-3451d4402bcf' : '1f91cb79-b55f-4482-945f-cf655a135a36';
     const subscriptionPayload = {
       plan_code: planCode,
-      currency: 'USD',
+      currency: 'ZAR',
       account: {
         code: accountCode
       }
     };
-    const subscriptionResp = await createSubscriptions(subscriptionPayload);
-    console.log('✅ Subscription created:', subscriptionResp);
-    res.status(200).json({ success: true, message: 'Subscription successful!', subscriptionResp });
+
+    try {
+      const subscriptionResp = await createAccounts(subscriptionPayload);
+      console.log(`✅ Created subscription ${accountCode}`);
+      console.log('✅ Subscription created:', subscriptionResp);
+      res.status(200).json({ success: true, message: 'Subscription successful!', subscriptionResp });
+
+    } catch (err) {
+      console.error(`❌ Failed to create subscription ${accountCode}:`, err.response?.data || err.message);
+    }
+    
+
 
     const webhookResp = await sendWebhookPayload(webhookPayload);
     console.log('✅ Webhook sent:', webhookResp);

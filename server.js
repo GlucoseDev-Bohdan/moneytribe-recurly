@@ -25,8 +25,8 @@ app.use((err, req, res, next) => {
   next();
 });
 
-const RECURLY_API_KEY = 'c0de0391e84842b08e044ff4e8d69690';
-// const RECURLY_API_KEY = 'c3fdabc62b2e49f5bc95996fe53e31b7';
+// const RECURLY_API_KEY = 'c0de0391e84842b08e044ff4e8d69690';
+const RECURLY_API_KEY = 'c3fdabc62b2e49f5bc95996fe53e31b7';
 const BASE_URL = 'https://v3.eu.recurly.com';
 const Webhook_URL = 'https://hooks.moneytribe21.com/webhook/f75c292c-92e1-4bd1-84ec-d884428a815d';
 
@@ -86,6 +86,15 @@ async function createSubscriptions(subscriptionData) {
   } catch (err) {
     console.error(`❌ Failed to create subscription for ${subscriptionData.account.code}:`, err.response?.data || err.message);
     throw err;
+  }
+}
+
+async function setAccountBillingInfo(accountId, billingInfo) {
+  try {
+    const response = await axios.put(`${BASE_URL}/accounts/${accountId}/billing_info`, billingInfo, { headers: HEADERS });
+    return response.data;
+  } catch (err) {
+    return err.response;
   }
 }
 
@@ -176,6 +185,11 @@ app.post('/subscribe', async (req, res) => {
 
     try {
       const subscriptionResp = await createSubscriptions(subscriptionPayload);
+      const billingInfoData = {
+        token_id: recurlyToken
+      }
+      await setAccountBillingInfo(accountCode, billingInfoData);
+      
       console.log(`✅ Created subscription ${accountCode}`);
       console.log('✅ Subscription created:', subscriptionResp);
       res.status(200).json({ success: true, message: 'Subscription successful!', subscriptionResp });

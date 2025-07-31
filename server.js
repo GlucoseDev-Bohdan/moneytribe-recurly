@@ -25,9 +25,10 @@ app.use((err, req, res, next) => {
   next();
 });
 
-const RECURLY_API_KEY = 'c0de0391e84842b08e044ff4e8d69690';
+// const RECURLY_API_KEY = 'c0de0391e84842b08e044ff4e8d69690';
+const RECURLY_API_KEY = 'c3fdabc62b2e49f5bc95996fe53e31b7';
 const BASE_URL = 'https://v3.eu.recurly.com';
-const Webhook_URL = 'https://hooks.moneytribe21.com/webhook/f75c292c-92e1-4bd1-84ec-d884428a815d';
+// const Webhook_URL = 'https://hooks.moneytribe21.com/webhook/f75c292c-92e1-4bd1-84ec-d884428a815d';
 
 const headers = {
   Authorization: 'Basic ' + Buffer.from(RECURLY_API_KEY + ':').toString('base64'),
@@ -41,6 +42,28 @@ async function getAccount(accountCode) {
     return response.data;
   } catch (err) {
     console.error('Recurly API Error Details:', err.response?.data);
+    throw err;
+  }
+}
+
+async function getAllAccounts() {
+  const allAccounts = [];
+  let nextUrl = `${BASE_URL}/accounts`;
+
+  try {
+    while (nextUrl) {
+      const response = await axios.get(nextUrl, { headers });
+
+      if (response.data?.data) {
+        allAccounts.push(...response.data.data);
+      }
+      nextUrl = response.data?.next ? `${BASE_URL}${response.data.next}` : null;
+    }
+
+    console.log(`✅ Retrieved ${allAccounts.length} accounts.`);
+    return allAccounts;
+  } catch (err) {
+    console.error('❌ Failed to retrieve accounts:', err.message);
     throw err;
   }
 }
@@ -148,8 +171,8 @@ app.post('/subscribe', async (req, res) => {
     console.log('✅ Subscription created:', subscriptionResp);
     res.status(200).json({ success: true, message: 'Subscription successful!', subscriptionResp });
 
-    const webhookResp = await sendWebhookPayload(webhookPayload);
-    console.log('✅ Webhook sent:', webhookResp);
+    // const webhookResp = await sendWebhookPayload(webhookPayload);
+    // console.log('✅ Webhook sent:', webhookResp);
 
   } catch (err) {
     console.error('❌ Error:', err);

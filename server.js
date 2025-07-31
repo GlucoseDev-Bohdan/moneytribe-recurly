@@ -128,7 +128,7 @@ app.post('/subscribe', async (req, res) => {
   }
 
   try {
-    const accountCode = email;
+    const accountCode = crypto.randomUUID();;
     const accountPayload = {
       code: accountCode,
       first_name,

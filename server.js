@@ -175,7 +175,7 @@ app.post('/subscribe', async (req, res) => {
     };
 
     try {
-      const subscriptionResp = await createAccounts(subscriptionPayload);
+      const subscriptionResp = await createSubscriptions(subscriptionPayload);
       console.log(`✅ Created subscription ${accountCode}`);
       console.log('✅ Subscription created:', subscriptionResp);
       res.status(200).json({ success: true, message: 'Subscription successful!', subscriptionResp });
